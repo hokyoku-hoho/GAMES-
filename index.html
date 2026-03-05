@@ -2,30 +2,31 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>ほのかのどうぶつの森ミニゲーム</title>
+
 <style>
+
 body{
 margin:0;
-background:#87CEEB;
-font-family:sans-serif;
 text-align:center;
+font-family:sans-serif;
+background:#87CEEB;
 }
 
-h1{
-margin:10px;
+p{
+margin-top:10px;
 }
 
 canvas{
 background:#7cfc00;
 border:4px solid #333;
 }
+
 </style>
 </head>
 
 <body>
 
-<h1>ほのかのどうぶつの森🌳</h1>
-<p>矢印キーで移動してください</p>
+<p>矢印キーで逃げて！鬼に捕まるとゲームオーバー</p>
 
 <canvas id="game" width="600" height="400"></canvas>
 
@@ -34,7 +35,7 @@ border:4px solid #333;
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-const tileSize = 40;
+const tile = 40;
 
 const map = [
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -49,12 +50,15 @@ const map = [
 [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0]
 ];
 
-const player = {
-x:0,
-y:0
-};
+let player = {x:0,y:0};
+let oni = {x:14,y:9};
+
+let gameOver = false;
 
 document.addEventListener("keydown",e=>{
+
+if(gameOver) return;
+
 let nx = player.x;
 let ny = player.y;
 
@@ -71,7 +75,40 @@ player.y = ny;
 }
 
 draw();
+
 });
+
+function moveOni(){
+
+if(gameOver) return;
+
+let dx = player.x - oni.x;
+let dy = player.y - oni.y;
+
+let nx = oni.x;
+let ny = oni.y;
+
+if(Math.abs(dx) > Math.abs(dy)){
+nx += dx>0 ? 1 : -1;
+}else{
+ny += dy>0 ? 1 : -1;
+}
+
+if(map[ny] && map[ny][nx]===0){
+oni.x = nx;
+oni.y = ny;
+}
+
+if(player.x===oni.x && player.y===oni.y){
+gameOver = true;
+alert("捕まった！");
+}
+
+draw();
+
+}
+
+setInterval(moveOni,500);
 
 function draw(){
 
@@ -82,31 +119,36 @@ for(let x=0;x<map[y].length;x++){
 
 if(map[y][x]===0){
 ctx.fillStyle="#7cfc00";
-ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize);
+ctx.fillRect(x*tile,y*tile,tile,tile);
 }
 
 if(map[y][x]===1){
-ctx.fillStyle="#228B22";
-ctx.fillRect(x*tileSize+10,y*tileSize+5,20,30);
 ctx.fillStyle="green";
 ctx.beginPath();
-ctx.arc(x*tileSize+20,y*tileSize+5,15,0,Math.PI*2);
+ctx.arc(x*tile+20,y*tile+15,15,0,Math.PI*2);
 ctx.fill();
+ctx.fillStyle="#8B4513";
+ctx.fillRect(x*tile+15,y*tile+15,10,20);
 }
 
 if(map[y][x]===2){
 ctx.fillStyle="gray";
 ctx.beginPath();
-ctx.arc(x*tileSize+20,y*tileSize+20,15,0,Math.PI*2);
+ctx.arc(x*tile+20,y*tile+20,15,0,Math.PI*2);
 ctx.fill();
 }
 
 }
 }
 
+ctx.fillStyle="blue";
+ctx.beginPath();
+ctx.arc(player.x*tile+20,player.y*tile+20,12,0,Math.PI*2);
+ctx.fill();
+
 ctx.fillStyle="red";
 ctx.beginPath();
-ctx.arc(player.x*tileSize+20,player.y*tileSize+20,12,0,Math.PI*2);
+ctx.arc(oni.x*tile+20,oni.y*tile+20,12,0,Math.PI*2);
 ctx.fill();
 
 }
