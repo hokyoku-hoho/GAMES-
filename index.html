@@ -26,7 +26,7 @@ border:4px solid #333;
 
 <body>
 
-<p>矢印キーで逃げて！鬼に捕まるとゲームオーバー</p>
+<p>矢印キーで逃げて！3秒止まるか鬼に捕まるとゲームオーバー</p>
 
 <canvas id="game" width="600" height="400"></canvas>
 
@@ -55,6 +55,8 @@ let oni = {x:14,y:9};
 
 let gameOver = false;
 
+let lastMoveTime = Date.now();
+
 document.addEventListener("keydown",e=>{
 
 if(gameOver) return;
@@ -69,8 +71,12 @@ if(e.key==="ArrowRight") nx++;
 
 if(ny>=0 && ny<map.length && nx>=0 && nx<map[0].length){
 if(map[ny][nx]===0){
+
 player.x = nx;
 player.y = ny;
+
+lastMoveTime = Date.now();
+
 }
 }
 
@@ -101,14 +107,29 @@ oni.y = ny;
 
 if(player.x===oni.x && player.y===oni.y){
 gameOver = true;
-alert("捕まった！");
+alert("鬼に捕まった！");
 }
 
 draw();
 
 }
 
-setInterval(moveOni,500);
+setInterval(moveOni,400);
+
+function checkStop(){
+
+if(gameOver) return;
+
+let now = Date.now();
+
+if(now - lastMoveTime > 3000){
+gameOver = true;
+alert("3秒止まったのでゲームオーバー！");
+}
+
+}
+
+setInterval(checkStop,100);
 
 function draw(){
 
