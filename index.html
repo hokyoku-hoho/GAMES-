@@ -45,17 +45,39 @@ const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 
 const tile=40;
+const W=15;
+const H=10;
 
 let player={x:0,y:0};
 let oni={x:14,y:9};
-
-let star={x:5,y:5};
 
 let score=0;
 let gameOver=false;
 let lastMove=Date.now();
 
-const map=Array.from({length:10},()=>Array(15).fill(0));
+// マップ（0=地面 1=障害物）
+let map=Array.from({length:H},()=>Array(W).fill(0));
+
+// ランダムで障害物を配置
+for(let i=0;i<25;i++){
+let x=Math.floor(Math.random()*W);
+let y=Math.floor(Math.random()*H);
+
+if((x===0 && y===0)||(x===14 && y===9)) continue;
+
+map[y][x]=1;
+}
+
+// スター生成
+let star=spawnStar();
+
+function spawnStar(){
+while(true){
+let x=Math.floor(Math.random()*W);
+let y=Math.floor(Math.random()*H);
+if(map[y][x]===0) return {x,y};
+}
+}
 
 document.addEventListener("keydown",e=>{
 
@@ -69,10 +91,12 @@ if(e.key==="ArrowDown")ny++;
 if(e.key==="ArrowLeft")nx--;
 if(e.key==="ArrowRight")nx++;
 
-if(nx>=0 && nx<15 && ny>=0 && ny<10){
+if(nx>=0 && nx<W && ny>=0 && ny<H){
+if(map[ny][nx]===0){
 player.x=nx;
 player.y=ny;
 lastMove=Date.now();
+}
 }
 
 checkStar();
@@ -83,8 +107,7 @@ draw();
 function checkStar(){
 if(player.x===star.x && player.y===star.y){
 score++;
-star.x=Math.floor(Math.random()*15);
-star.y=Math.floor(Math.random()*10);
+star=spawnStar();
 }
 }
 
@@ -95,11 +118,26 @@ if(gameOver)return;
 let dx=player.x-oni.x;
 let dy=player.y-oni.y;
 
+let nx=oni.x;
+let ny=oni.y;
+
+// 簡単な回避ロジック
 if(Math.abs(dx)>Math.abs(dy)){
-oni.x+=dx>0?1:-1;
-}else{
-oni.y+=dy>0?1:-1;
+if(map[oni.y][oni.x+(dx>0?1:-1)]===0){
+nx+=dx>0?1:-1;
+}else if(map[oni.y+(dy>0?1:-1)] && map[oni.y+(dy>0?1:-1)][oni.x]===0){
+ny+=dy>0?1:-1;
 }
+}else{
+if(map[oni.y+(dy>0?1:-1)] && map[oni.y+(dy>0?1:-1)][oni.x]===0){
+ny+=dy>0?1:-1;
+}else if(map[oni.y][oni.x+(dx>0?1:-1)]===0){
+nx+=dx>0?1:-1;
+}
+}
+
+oni.x=nx;
+oni.y=ny;
 
 if(player.x===oni.x && player.y===oni.y){
 gameOver=true;
@@ -126,11 +164,20 @@ function draw(){
 
 ctx.clearRect(0,0,600,400);
 
-// マス
-for(let y=0;y<10;y++){
-for(let x=0;x<15;x++){
+// 地面
+for(let y=0;y<H;y++){
+for(let x=0;x<W;x++){
+
+if(map[y][x]===0){
 ctx.fillStyle="#a8e6cf";
 ctx.fillRect(x*tile,y*tile,tile,tile);
+}else{
+ctx.fillStyle="#888";
+ctx.beginPath();
+ctx.arc(x*tile+20,y*tile+20,14,0,Math.PI*2);
+ctx.fill();
+}
+
 }
 }
 
