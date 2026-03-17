@@ -4,173 +4,158 @@
 <meta charset="UTF-8">
 
 <style>
-
 body{
 margin:0;
-text-align:center;
 font-family:sans-serif;
-background:#87CEEB;
+background:linear-gradient(135deg,#c2f0ff,#d4ffd6);
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:100vh;
 }
 
-p{
-margin-top:10px;
+.info{
+background:white;
+padding:10px 20px;
+border-radius:20px;
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+margin-bottom:10px;
 }
 
 canvas{
-background:#7cfc00;
-border:4px solid #333;
+background:#a8e6cf;
+border-radius:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.25);
 }
-
 </style>
 </head>
 
 <body>
 
-<p>矢印キーで逃げて！3秒止まるか鬼に捕まるとゲームオーバー</p>
+<div class="info">
+⭐ スターを集めて！鬼から逃げよう！（3秒止まると負け）
+</div>
 
 <canvas id="game" width="600" height="400"></canvas>
 
 <script>
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
-const tile = 40;
+const tile=40;
 
-const map = [
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-[0,1,0,0,2,0,0,0,1,0,0,0,2,0,0],
-[0,0,0,0,0,0,1,0,0,0,2,0,0,0,0],
-[0,0,2,0,0,0,0,0,0,0,0,0,1,0,0],
-[0,0,0,0,1,0,0,2,0,0,0,0,0,0,0],
-[0,0,0,0,0,0,0,0,0,1,0,0,0,2,0],
-[0,1,0,0,0,2,0,0,0,0,0,1,0,0,0],
-[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
-[0,0,0,2,0,0,0,0,0,0,1,0,0,0,0],
-[0,0,0,0,0,0,1,0,0,0,0,0,0,0,0]
-];
+let player={x:0,y:0};
+let oni={x:14,y:9};
 
-let player = {x:0,y:0};
-let oni = {x:14,y:9};
+let star={x:5,y:5};
 
-let gameOver = false;
+let score=0;
+let gameOver=false;
+let lastMove=Date.now();
 
-let lastMoveTime = Date.now();
+const map=Array.from({length:10},()=>Array(15).fill(0));
 
 document.addEventListener("keydown",e=>{
 
-if(gameOver) return;
+if(gameOver)return;
 
-let nx = player.x;
-let ny = player.y;
+let nx=player.x;
+let ny=player.y;
 
-if(e.key==="ArrowUp") ny--;
-if(e.key==="ArrowDown") ny++;
-if(e.key==="ArrowLeft") nx--;
-if(e.key==="ArrowRight") nx++;
+if(e.key==="ArrowUp")ny--;
+if(e.key==="ArrowDown")ny++;
+if(e.key==="ArrowLeft")nx--;
+if(e.key==="ArrowRight")nx++;
 
-if(ny>=0 && ny<map.length && nx>=0 && nx<map[0].length){
-if(map[ny][nx]===0){
-
-player.x = nx;
-player.y = ny;
-
-lastMoveTime = Date.now();
-
-}
+if(nx>=0 && nx<15 && ny>=0 && ny<10){
+player.x=nx;
+player.y=ny;
+lastMove=Date.now();
 }
 
+checkStar();
 draw();
 
 });
 
-function moveOni(){
-
-if(gameOver) return;
-
-let dx = player.x - oni.x;
-let dy = player.y - oni.y;
-
-let nx = oni.x;
-let ny = oni.y;
-
-if(Math.abs(dx) > Math.abs(dy)){
-nx += dx>0 ? 1 : -1;
-}else{
-ny += dy>0 ? 1 : -1;
+function checkStar(){
+if(player.x===star.x && player.y===star.y){
+score++;
+star.x=Math.floor(Math.random()*15);
+star.y=Math.floor(Math.random()*10);
+}
 }
 
-if(map[ny] && map[ny][nx]===0){
-oni.x = nx;
-oni.y = ny;
+function moveOni(){
+
+if(gameOver)return;
+
+let dx=player.x-oni.x;
+let dy=player.y-oni.y;
+
+if(Math.abs(dx)>Math.abs(dy)){
+oni.x+=dx>0?1:-1;
+}else{
+oni.y+=dy>0?1:-1;
 }
 
 if(player.x===oni.x && player.y===oni.y){
-gameOver = true;
-alert("鬼に捕まった！");
+gameOver=true;
+alert("鬼に捕まった！スコア："+score);
 }
 
 draw();
 
 }
 
-setInterval(moveOni,400);
+setInterval(moveOni,300);
 
 function checkStop(){
+if(gameOver)return;
 
-if(gameOver) return;
-
-let now = Date.now();
-
-if(now - lastMoveTime > 3000){
-gameOver = true;
-alert("3秒止まったのでゲームオーバー！");
+if(Date.now()-lastMove>3000){
+gameOver=true;
+alert("止まりすぎ！スコア："+score);
 }
-
 }
-
 setInterval(checkStop,100);
 
 function draw(){
 
-ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.clearRect(0,0,600,400);
 
-for(let y=0;y<map.length;y++){
-for(let x=0;x<map[y].length;x++){
-
-if(map[y][x]===0){
-ctx.fillStyle="#7cfc00";
+// マス
+for(let y=0;y<10;y++){
+for(let x=0;x<15;x++){
+ctx.fillStyle="#a8e6cf";
 ctx.fillRect(x*tile,y*tile,tile,tile);
 }
+}
 
-if(map[y][x]===1){
-ctx.fillStyle="green";
+// スター
+ctx.fillStyle="yellow";
 ctx.beginPath();
-ctx.arc(x*tile+20,y*tile+15,15,0,Math.PI*2);
+ctx.arc(star.x*tile+20,star.y*tile+20,10,0,Math.PI*2);
 ctx.fill();
-ctx.fillStyle="#8B4513";
-ctx.fillRect(x*tile+15,y*tile+15,10,20);
-}
 
-if(map[y][x]===2){
-ctx.fillStyle="gray";
-ctx.beginPath();
-ctx.arc(x*tile+20,y*tile+20,15,0,Math.PI*2);
-ctx.fill();
-}
-
-}
-}
-
-ctx.fillStyle="blue";
+// プレイヤー
+ctx.fillStyle="#4da6ff";
 ctx.beginPath();
 ctx.arc(player.x*tile+20,player.y*tile+20,12,0,Math.PI*2);
 ctx.fill();
 
-ctx.fillStyle="red";
+// 鬼
+ctx.fillStyle="#ff5a5a";
 ctx.beginPath();
 ctx.arc(oni.x*tile+20,oni.y*tile+20,12,0,Math.PI*2);
 ctx.fill();
+
+// スコア
+ctx.fillStyle="black";
+ctx.font="16px sans-serif";
+ctx.fillText("Score: "+score,10,20);
 
 }
 
